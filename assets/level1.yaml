@@ -1,0 +1,56 @@
+# Escape Through Time: Level 1 - Buried Treasure
+# Objects are assembled from interchangeable components; order is not significant.
+GameObjects:
+  - id: player
+    components:
+      - type: BodyComponent
+        x: 75
+        y: 420
+        width: 34
+        height: 48
+      - type: SpriteComponent
+        r: 74
+        g: 166
+        b: 220
+        shape: player
+      - type: ControllerComponent
+        speed: 270
+        jumpSpeed: 540
+      - type: CombatComponent
+        health: 3
+        player: true
+
+  - id: beach-sentinel
+    components:
+      - type: BodyComponent
+        x: 360
+        y: 422
+        width: 38
+        height: 48
+      - type: SpriteComponent
+        r: 190
+        g: 108
+        b: 74
+      - type: PatrolComponent
+        left: 300
+        right: 560
+        speed: 82
+      - type: CombatComponent
+        health: 2
+
+  - id: time-touched
+    components:
+      - type: BodyComponent
+        x: 735
+        y: 342
+        width: 40
+        height: 48
+      - type: SpriteComponent
+        r: 155
+        g: 95
+        b: 190
+      - type: ChaseComponent
+        range: 260
+        speed: 105
+      - type: CombatComponent
+        health: 3

@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.16)
+project(EscapeThroughTime LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(SDL2 REQUIRED)
+find_package(yaml-cpp CONFIG REQUIRED)
+add_executable(EscapeThroughTime
+    main.cpp Engine.cpp Input.cpp Components.cpp ComponentFactory.cpp)
+target_include_directories(EscapeThroughTime PRIVATE ${SDL2_INCLUDE_DIRS})
+target_link_libraries(EscapeThroughTime PRIVATE ${SDL2_LIBRARIES} yaml-cpp)
