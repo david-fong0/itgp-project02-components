@@ -12,8 +12,11 @@ std::vector<std::unique_ptr<GameObject>> Engine::objects_;
 GameObject* Engine::player_=nullptr;
 std::string Engine::message_="Defeat the time-touched creatures to clear the beach route.";
 float Engine::deltaTime_=0.016f;
+View* Engine::view_ = nullptr;
 
 bool Engine::init(const char* title, int w, int h) {
+    delete view_;
+    view_ = nullptr;
     width_=w; height_=h;
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS) != 0) return false;
     window_=SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, SDL_WINDOW_SHOWN);
@@ -21,7 +24,9 @@ bool Engine::init(const char* title, int w, int h) {
     renderer_=SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
     if (!renderer_) renderer_=SDL_CreateRenderer(window_, -1, SDL_RENDERER_SOFTWARE);
     if (!renderer_) return false;
-    running_=true; return true;
+    view_ = new View(w, h);
+    running_=true; 
+    return true;
 }
 SDL_Renderer* Engine::renderer(){return renderer_;}
 int Engine::width(){return width_;}
@@ -33,6 +38,7 @@ void Engine::setPlayer(GameObject* p){player_=p;}
 void Engine::setMessage(std::string m){message_=std::move(m); if(window_) SDL_SetWindowTitle(window_,message_.c_str());}
 const std::string& Engine::message(){return message_;}
 float Engine::deltaTime(){return deltaTime_;}
+View* Engine::view(){return view_;}
 
 void Engine::drawWorld() {
     auto* r=renderer_;

@@ -1,5 +1,6 @@
 #pragma once
 #include "GameObject.h"
+#include "View.h"
 #include <SDL.h>
 #include <memory>
 #include <string>
@@ -21,6 +22,7 @@ public:
     static void setMessage(std::string message);
     static float deltaTime();
     static const std::string& message();
+    static View* view();
 private:
     static SDL_Window* window_;
     static SDL_Renderer* renderer_;
@@ -30,4 +32,5 @@ private:
     static GameObject* player_;
     static std::string message_;
     static float deltaTime_;
+    static View* view_;
 };
