@@ -46,15 +46,38 @@ void Engine::drawWorld() {
     // distant sky and ruins
     SDL_Rect moon{760,65,70,70}; SDL_SetRenderDrawColor(r,220,220,190,255); SDL_RenderFillRect(r,&moon);
     SDL_SetRenderDrawColor(r,27,43,67,255);
-    for(int i=0;i<9;i++){ SDL_Rect ruin{ i*125-25, 245-(i%3)*24, 78, 170+(i%3)*24}; SDL_RenderFillRect(r,&ruin); }
+    for(int i=0;i<9;i++){
+        SDL_Rect ruin = view_
+            ? view_->worldToScreen(
+                i*125-25,
+                245-(i%3)*24,
+                78,
+                170+(i%3)*24
+                )
+            : SDL_Rect{i*125-25, 245-(i%3)*24, 78, 170+(i%3)*24};
+
+        SDL_RenderFillRect(r,&ruin);
+    }
     SDL_SetRenderDrawColor(r,49,65,79,255);
-    SDL_Rect ground{0,470,width_,70}; SDL_RenderFillRect(r,&ground);
+    SDL_Rect ground = view_
+        ? view_->worldToScreen(0,470,width_,70)
+        : SDL_Rect{0,470,width_,70};
+    SDL_RenderFillRect(r,&ground);
     SDL_SetRenderDrawColor(r,105,118,104,255);
-    for(int i=0;i<width_;i+=48){ SDL_Rect stone{i,470,44,5}; SDL_RenderFillRect(r,&stone); }
+    for(int i=0;i<width_;i+=48){
+    SDL_Rect stone = view_
+        ? view_->worldToScreen(i,470,44,5)
+        : SDL_Rect{i,470,44,5};
+    SDL_RenderFillRect(r,&stone);
+    }
     // platforms
     SDL_SetRenderDrawColor(r,75,86,93,255);
-    SDL_Rect p1{210,370,155,18}, p2{475,315,145,18}, p3{700,390,150,18};
-    SDL_RenderFillRect(r,&p1); SDL_RenderFillRect(r,&p2); SDL_RenderFillRect(r,&p3);
+    SDL_Rect p1 = view_ ? view_->worldToScreen(210,370,155,18) : SDL_Rect{210,370,155,18};
+    SDL_Rect p2 = view_ ? view_->worldToScreen(475,315,145,18) : SDL_Rect{475,315,145,18};
+    SDL_Rect p3 = view_ ? view_->worldToScreen(700,390,150,18) : SDL_Rect{700,390,150,18};
+    SDL_RenderFillRect(r,&p1); 
+    SDL_RenderFillRect(r,&p2); 
+    SDL_RenderFillRect(r,&p3);
     for(auto& o:objects_) o->draw();
     // basic HUD drawn with bars (no font dependency)
     if(player_) if(auto* c=player_->get<CombatComponent>()){
@@ -84,6 +107,14 @@ void Engine::run(){
         float dt=std::min(0.033f,float(now-last)/SDL_GetPerformanceFrequency()); last=now;
         deltaTime_=dt;
         for(auto& o:objects_) o->update();
+        if (player_ && view_) {
+            if (auto* body = player_->get<BodyComponent>()) {
+                view_->follow(
+                    body->x + body->w / 2.0f,
+                    body->y + body->h / 2.0f
+                );
+            }
+        }
         removeDeadObjects();
         drawWorld();
         Input::endFrame();

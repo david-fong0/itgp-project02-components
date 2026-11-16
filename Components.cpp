@@ -30,6 +30,11 @@ void BodyComponent::update() {
 void SpriteComponent::draw() {
     auto* body=parent().get<BodyComponent>(); if(!body) return;
     SDL_Rect dst=rectFor(*body);
+    if (Engine::view()) {
+    dst = Engine::view()->worldToScreen(
+        body->x, body->y, dst.w, dst.h
+        );
+    }
     SDL_SetRenderDrawColor(Engine::renderer(),color.r,color.g,color.b,255);
     SDL_RenderFillRect(Engine::renderer(),&dst);
     // simple face/armor detail gives the primitive sprites character
