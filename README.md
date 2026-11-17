@@ -1,68 +1,68 @@
 # Escape Through Time — Component-Based Game Demo
 
-A small SDL2 2D action-platformer prototype for the component architecture assignment. It adapts the *Escape Through Time* premise from the accompanying game design document into one compact playable level, **Buried Treasure**.
+A small SDL2 2D action-platformer prototype built around a component-based game architecture. The project adapts the *Escape Through Time* premise into one compact playable level, **Buried Treasure**.
 
 ## Features
 
-- Component-based `GameObject` architecture: each object owns a `std::vector<std::unique_ptr<Component>>`.
-- Abstract `Component` interface with `update()`, `draw()`, and `parent()`.
-- `BodyComponent`: position, velocity, angle, size, and grounded state.
-- `SpriteComponent`: draws simple colored character sprites using SDL2 primitives (no external art assets required).
-- `ControllerComponent`: keyboard movement, jumping, and sword attacks; attacks work while moving.
-- `PatrolComponent` (`Behavior1Component`): patrols between two horizontal bounds.
-- `ChaseComponent` (`Behavior2Component`): pursues the player inside a detection radius.
-- `CombatComponent`: player/enemy health, contact damage, attack cooldown, and enemy defeat.
-- `ComponentFactory`: reads YAML and uses `std::map<std::string, std::function<...>>` to create and attach components.
-- Simple HUD health bar and a small platform layout.
+- **Component-based architecture:** Each `GameObject` owns a vector of components.
+- **Component interface:** Abstract `Component` class with `update()`, `draw()`, and `parent()` functions.
+- **BodyComponent:** Handles position, velocity, angle, size, gravity, and grounded state.
+- **SpriteComponent:** Draws game objects using SDL2, including loaded image textures.
+- **AssetManager:** Loads BMP images from the assets folder and stores textures in a `std::map` using their filenames as keys.
+- **View class:** Implements a camera that follows the player and transforms world coordinates into screen coordinates.
+- **ControllerComponent:** Supports keyboard movement, jumping, and sword attacks.
+- **PatrolComponent:** Allows enemies to patrol between horizontal boundaries.
+- **ChaseComponent:** Allows enemies to pursue the player within a detection radius.
+- **CombatComponent:** Handles player and enemy health, contact damage, attack cooldowns, and enemy defeat.
+- **ComponentFactory:** Reads YAML configuration and creates components using a registry map.
+- **Frame rate management:** Supports a configurable target FPS and waits when frames finish early.
+- **Delta time:** Tracks elapsed frame time for consistent movement and physics.
+- **HUD:** Displays the player's health.
 
 ## Controls
 
-- **A / D** or **Left / Right**: move
-- **Space**, **W**, or **Up**: jump
-- **J**: sword attack (can attack while moving)
-- **Esc**: quit
+- **A / D** or **Left / Right:** Move
+- **Space**, **W**, or **Up:** Jump
+- **J:** Sword attack
+- **Esc:** Quit
 
-## Build (VS Code + MSYS2 UCRT64)
+## Build and Run (VS Code + MSYS2 UCRT64)
 
-Install the UCRT64 packages in the MSYS2 UCRT64 terminal:
+Install the required packages in the MSYS2 UCRT64 terminal:
 
 ```bash
 pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-SDL2 mingw-w64-ucrt-x86_64-yaml-cpp pkgconf make
 ```
 
-From the project directory:
+Open a terminal in the project directory and run:
 
 ```bash
 make
 ./EscapeThroughTime.exe
 ```
 
-The program loads `assets/level1.yaml` relative to the working directory, so run it from the project root. In VS Code, choose **Terminal → New Terminal**, select **MSYS2 UCRT64**, then run the commands above.
+Run the program from the project root because it loads `assets/level1.yaml` and image files from the relative `assets` directory.
 
-Alternative CMake build:
+## Configuration
 
-```bash
-cmake -S . -B build -G "MinGW Makefiles"
-cmake --build build
-./build/EscapeThroughTime.exe
+The target frame rate can be changed in `main.cpp`:
+
+```cpp
+Engine::setTargetFPS(60);
 ```
 
-## Architecture notes
+The number can be changed to another positive value to adjust the target FPS.
 
-`GameObject::add<T>(args...)` constructs a component with its owning `GameObject&` and appends it to the component vector. `get<T>()` searches by dynamic type and returns a non-owning raw pointer or `nullptr`. `update()` and `draw()` forward to every component.
+The AssetManager automatically scans the `assets` directory for BMP files. Each image is stored using its filename without the extension as its key. For example, `player.bmp` can be retrieved using:
 
-The factory is initialized with a registry map. Each registry entry maps a YAML `type` name to a creator function. The factory reads each object's `components` sequence and invokes the matching creator, so new component types can be registered without adding new `GameObject` subclasses.
-
-`Behavior1Component` and `Behavior2Component` are aliases for the named behaviors used in this demo: patrol and chase. The concrete classes are `PatrolComponent` and `ChaseComponent`.
-
-## Current prototype scope
-
-This is intentionally a one-level mechanics demo, not a complete metroidvania. It uses simple rectangle-based artwork and lightweight platform/floor handling rather than a full physics engine. The body component handles gravity and landing on the floor and three simple platforms; this is intentionally lightweight rather than a full physics engine. The second-level boss, save system, and full animation/audio pipeline from the design document are outside this assignment prototype's current scope.
-
-## Screenshots
-
-Add screenshots after running the demo:
-
-```markdown
-![Gameplay screenshot](docs/gameplay.png)
+```cpp
+AssetManager::get("player");
 ```
+
+The level configuration is stored in `assets/level1.yaml`, where game objects and their components are defined.
+
+## Architecture Notes
+
+`GameObject::add<T>(args...)` constructs a component with its owning `GameObject` and appends it to the component vector. `get<T>()` searches by dynamic type and returns a non-owning pointer or `nullptr`.
+
+The `ComponentFactory` uses a registry map to associate

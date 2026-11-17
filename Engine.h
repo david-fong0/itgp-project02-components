@@ -21,6 +21,8 @@ public:
     static void drawWorld();
     static void setMessage(std::string message);
     static float deltaTime();
+    static int targetFPS();
+    static void setTargetFPS(int fps);
     static const std::string& message();
     static View* view();
 private:
@@ -32,5 +34,6 @@ private:
     static GameObject* player_;
     static std::string message_;
     static float deltaTime_;
+    static int targetFPS_;
     static View* view_;
 };

@@ -1,6 +1,7 @@
 #include "Engine.h"
 #include "Input.h"
 #include "Components.h"
+#include "AssetManager.h"
 #include <algorithm>
 #include <cmath>
 
@@ -12,6 +13,7 @@ std::vector<std::unique_ptr<GameObject>> Engine::objects_;
 GameObject* Engine::player_=nullptr;
 std::string Engine::message_="Defeat the time-touched creatures to clear the beach route.";
 float Engine::deltaTime_=0.016f;
+int Engine::targetFPS_ = 60;
 View* Engine::view_ = nullptr;
 
 bool Engine::init(const char* title, int w, int h) {
@@ -21,9 +23,10 @@ bool Engine::init(const char* title, int w, int h) {
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS) != 0) return false;
     window_=SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, SDL_WINDOW_SHOWN);
     if (!window_) return false;
-    renderer_=SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
+    renderer_=SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer_) renderer_=SDL_CreateRenderer(window_, -1, SDL_RENDERER_SOFTWARE);
     if (!renderer_) return false;
+    AssetManager::loadAssets(renderer_, "assets");
     view_ = new View(w, h);
     running_=true; 
     return true;
@@ -38,6 +41,12 @@ void Engine::setPlayer(GameObject* p){player_=p;}
 void Engine::setMessage(std::string m){message_=std::move(m); if(window_) SDL_SetWindowTitle(window_,message_.c_str());}
 const std::string& Engine::message(){return message_;}
 float Engine::deltaTime(){return deltaTime_;}
+int Engine::targetFPS(){return targetFPS_;}
+void Engine::setTargetFPS(int fps){
+    if (fps > 0) {
+        targetFPS_ = fps;
+    }
+}
 View* Engine::view(){return view_;}
 
 void Engine::drawWorld() {
@@ -101,11 +110,15 @@ void Engine::removeDeadObjects(){
 void Engine::run(){
     Uint64 last=SDL_GetPerformanceCounter();
     while(running_){
+        Uint64 frameStart = SDL_GetPerformanceCounter();
         SDL_Event e; while(SDL_PollEvent(&e)){ if(e.type==SDL_QUIT) running_=false; Input::processEvent(e); }
         if(Input::pressed(SDL_SCANCODE_ESCAPE)) running_=false;
-        Uint64 now=SDL_GetPerformanceCounter();
-        float dt=std::min(0.033f,float(now-last)/SDL_GetPerformanceFrequency()); last=now;
-        deltaTime_=dt;
+        float dt = std::min(
+            0.1f,
+            float(frameStart - last) / SDL_GetPerformanceFrequency()
+        );
+        last = frameStart;
+        deltaTime_ = dt;
         for(auto& o:objects_) o->update();
         if (player_ && view_) {
             if (auto* body = player_->get<BodyComponent>()) {
@@ -117,12 +130,40 @@ void Engine::run(){
         }
         removeDeadObjects();
         drawWorld();
+
+        // Limit the frame rate if processing finishes early.
+        Uint64 frameEnd = SDL_GetPerformanceCounter();
+        Uint64 elapsed = frameEnd - frameStart;
+        Uint64 targetTicks = SDL_GetPerformanceFrequency() / targetFPS_;
+
+        if (elapsed < targetTicks) {
+            Uint32 delayMs = static_cast<Uint32>(
+                (targetTicks - elapsed) * 1000 /
+                SDL_GetPerformanceFrequency()
+            );
+
+            if (delayMs > 0) {
+                SDL_Delay(delayMs);
+            }
+        }
+
         Input::endFrame();
     }
 }
 void Engine::shutdown(){
-    objects_.clear(); player_=nullptr;
+    objects_.clear();
+    player_ = nullptr;
+
+    delete view_;
+    view_ = nullptr;
+
+    AssetManager::clear();
+
     if(renderer_) SDL_DestroyRenderer(renderer_);
     if(window_) SDL_DestroyWindow(window_);
-    renderer_=nullptr; window_=nullptr; SDL_Quit();
+
+    renderer_ = nullptr;
+    window_ = nullptr;
+
+    SDL_Quit();
 }

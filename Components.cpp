@@ -2,6 +2,7 @@
 #include "GameObject.h"
 #include "Engine.h"
 #include "Input.h"
+#include "AssetManager.h"
 #include <algorithm>
 #include <cmath>
 
@@ -35,8 +36,16 @@ void SpriteComponent::draw() {
         body->x, body->y, dst.w, dst.h
         );
     }
-    SDL_SetRenderDrawColor(Engine::renderer(),color.r,color.g,color.b,255);
-    SDL_RenderFillRect(Engine::renderer(),&dst);
+    SDL_Texture* texture = (shape == "player")
+        ? AssetManager::get("player")
+        : nullptr;
+
+    if (texture) {
+        SDL_RenderCopy(Engine::renderer(), texture, nullptr, &dst);
+    } else {
+        SDL_SetRenderDrawColor(Engine::renderer(), color.r, color.g, color.b, 255);
+        SDL_RenderFillRect(Engine::renderer(), &dst);
+    }
     // simple face/armor detail gives the primitive sprites character
     SDL_SetRenderDrawColor(Engine::renderer(),20,25,34,255);
     SDL_Rect eye{dst.x+(dst.w/2),dst.y+10,5,5}; SDL_RenderFillRect(Engine::renderer(),&eye);

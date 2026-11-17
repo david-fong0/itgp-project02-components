@@ -10,6 +10,7 @@ int main(int argc,char** argv) {
     if(!Engine::init("Escape Through Time - Component Demo",960,540)){
         std::cerr<<"SDL initialization failed: "<<SDL_GetError()<<"\n"; return 1;
     }
+    Engine::setTargetFPS(60);
     try {
         ComponentFactory factory;
         auto objects=factory.load("assets/level1.yaml");
